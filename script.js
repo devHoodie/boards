@@ -333,65 +333,69 @@ function updateCardBorderColor(card) {
   });
 
   document.getElementById('import-file').addEventListener('change', (e) => {
-    try {
-      const file = e.target.files[0];
-      if (!file) return;
+  try {
+    const file = e.target.files[0];
+    if (!file) return;
 
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const state = JSON.parse(event.target.result);
-        if (!state) {
-          alert('Invalid file!');
-          return;
-        }
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const state = JSON.parse(event.target.result);
+      if (!state) {
+        alert('Invalid file!');
+        return;
+      }
 
-        // Clear the current board
-        const listsContainer = document.querySelector('.lists-container');
-        listsContainer.innerHTML = '';
+      // Clear the current board
+      const listsContainer = document.querySelector('.lists-container');
+      listsContainer.innerHTML = '';
 
-        // Load the imported state
-        if (state.boardTitle) {
-          document.querySelector('h1').textContent = state.boardTitle;
-        }
-        if (state.tags && state.tags.length > 0) {
-          state.tags.forEach(tag => {
-            createTag(tag.name, tag.color);
+      // Clear all existing tags from the Available Tags section
+      const tagsList = document.querySelector('.tags-list');
+      tagsList.innerHTML = ''; // Clear the tags list
+
+      // Load the imported state
+      if (state.boardTitle) {
+        document.querySelector('h1').textContent = state.boardTitle;
+      }
+      if (state.tags && state.tags.length > 0) {
+        state.tags.forEach(tag => {
+          createTag(tag.name, tag.color); // Create new tags from the imported state
+        });
+      }
+      if (state.lists && state.lists.length > 0) {
+        state.lists.forEach(list => {
+          const listElement = document.createElement('div');
+          listElement.className = 'list';
+          listElement.setAttribute('data-list-id', list.id);
+          listElement.innerHTML = `
+            <h2 contenteditable="true">${list.title}</h2>
+            <input type="text" class="add-card-input" placeholder="Add a card...">
+            <button class="add-card-btn">Add Card</button>
+            <div class="cards"></div>
+          `;
+          listsContainer.appendChild(listElement);
+
+          list.cards.forEach(card => {
+            const cardElement = createCard(listElement, card.text, card.description);
+            if (card.tags && card.tags.length > 0) {
+              card.tags.forEach(tag => {
+                applyTagToCard(cardElement, tag);
+              });
+            }
           });
-        }
-        if (state.lists && state.lists.length > 0) {
-          state.lists.forEach(list => {
-            const listElement = document.createElement('div');
-            listElement.className = 'list';
-            listElement.setAttribute('data-list-id', list.id);
-            listElement.innerHTML = `
-              <h2 contenteditable="true">${list.title}</h2>
-              <input type="text" class="add-card-input" placeholder="Add a card...">
-              <button class="add-card-btn">Add Card</button>
-              <div class="cards"></div>
-            `;
-            listsContainer.appendChild(listElement);
+        });
+      }
 
-            list.cards.forEach(card => {
-              const cardElement = createCard(listElement, card.text, card.description);
-              if (card.tags && card.tags.length > 0) {
-                card.tags.forEach(tag => {
-                  applyTagToCard(cardElement, tag);
-                });
-              }
-            });
-          });
-        }
-
-        // Save the imported state to localStorage
-        localStorage.setItem('trelloBoard', JSON.stringify(state));
-        alert('Board imported successfully!');
-      };
-      reader.readAsText(file);
-    } catch (error) {
-      logError(error);
-      alert('Failed to import board. Please check the file format.');
-    }
-  });
+      // Save the imported state to localStorage
+      localStorage.setItem('trelloBoard', JSON.stringify(state));
+      alert('Board imported successfully!');
+    };
+    reader.readAsText(file);
+  } catch (error) {
+    logError(error);
+    alert('Failed to import board. Please check the file format.');
+  }
+});
 
 
 // Add reset board functionality
