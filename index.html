@@ -73,7 +73,20 @@
     <h3>Error Console</h3>
     <div class="error-log"></div>
   </div>
-
+<!-- Detailed View Window -->
+<div id="card-detail-view" class="card-detail-view">
+  <div class="card-detail-header draggable-handle">
+    <h2 id="card-detail-name" contenteditable="true"></h2>
+    <button id="close-card-detail-btn">×</button>
+  </div>
+  <div id="card-detail-description" contenteditable="true"></div>
+  <div id="card-detail-tags"></div>
+  <div class="checklist">
+    <h3>Checklist</h3>
+    <div id="checklist-items"></div>
+    <button id="add-checklist-item-btn">+ Add Item</button>
+  </div>
+</div>
   <script src="script.js"></script>
 </body>
 </html>
