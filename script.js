@@ -12,35 +12,39 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Load saved state from localStorage
-  try {
-    const savedState = JSON.parse(localStorage.getItem('trelloBoard')) || {};
-    if (savedState.boardTitle) {
-      document.querySelector('h1').textContent = savedState.boardTitle;
-    }
-    if (savedState.tags && savedState.tags.length > 0) {
-      savedState.tags.forEach(tag => {
-        createTag(tag.name, tag.color);
-      });
-    }
-    if (savedState.lists && savedState.lists.length > 0) {
-      savedState.lists.forEach(list => {
-        const listElement = document.querySelector(`[data-list-id="${list.id}"]`);
-        if (listElement) {
-          listElement.querySelector('h2').textContent = list.title;
-          list.cards.forEach(card => {
-            const cardElement = createCard(listElement, card.text, card.description);
-            if (card.tags && card.tags.length > 0) {
-              card.tags.forEach(tag => {
-                applyTagToCard(cardElement, tag);
-              });
-            }
-          });
-        }
-      });
-    }
-  } catch (error) {
-    logError(error);
+try {
+  const savedState = JSON.parse(localStorage.getItem('trelloBoard')) || {};
+  if (savedState.boardTitle) {
+    document.querySelector('h1').textContent = savedState.boardTitle;
   }
+  if (savedState.tags && savedState.tags.length > 0) {
+    savedState.tags.forEach(tag => {
+      createTag(tag.name, tag.color);
+    });
+  }
+  if (savedState.lists && savedState.lists.length > 0) {
+    savedState.lists.forEach(list => {
+      const listElement = document.querySelector(`[data-list-id="${list.id}"]`);
+      if (listElement) {
+        listElement.querySelector('h2').textContent = list.title;
+        list.cards.forEach(card => {
+          const cardElement = createCard(listElement, card.text, card.description);
+          if (card.tags && card.tags.length > 0) {
+            card.tags.forEach(tag => {
+              applyTagToCard(cardElement, tag);
+            });
+          }
+          // Load checklist items
+          if (card.checklist && card.checklist.length > 0) {
+            cardElement.dataset.checklist = JSON.stringify(card.checklist);
+          }
+        });
+      }
+    });
+  }
+} catch (error) {
+  logError(error);
+}
 
   // Tag Creation
   document.getElementById('create-tag-btn').addEventListener('click', () => {
@@ -332,7 +336,7 @@ function updateCardBorderColor(card) {
     document.getElementById('import-file').click(); // Trigger file input
   });
 
-  document.getElementById('import-file').addEventListener('change', (e) => {
+ document.getElementById('import-file').addEventListener('change', (e) => {
   try {
     const file = e.target.files[0];
     if (!file) return;
@@ -374,23 +378,30 @@ function updateCardBorderColor(card) {
             <div class="cards"></div>
           `;
           listsContainer.appendChild(listElement);
-
+listElement.querySelector('h2').textContent = list.title;
           list.cards.forEach(card => {
-            const cardElement = createCard(listElement, card.text, card.description);
-            if (card.tags && card.tags.length > 0) {
-              card.tags.forEach(tag => {
-                applyTagToCard(cardElement, tag);
-              });
-            }
-          });
+          const cardElement = createCard(listElement, card.text, card.description);
+          if (card.tags && card.tags.length > 0) {
+            card.tags.forEach(tag => {
+              applyTagToCard(cardElement, tag);
+            });
+          }
+          // Load checklist items
+          if (card.checklist && card.checklist.length > 0) {
+            cardElement.dataset.checklist = JSON.stringify(card.checklist);
+          }
+        });
         });
       }
+	  
 
       // Save the imported state to localStorage
       localStorage.setItem('trelloBoard', JSON.stringify(state));
       alert('Board imported successfully!');
     };
     reader.readAsText(file);
+	
+	document.getElementById('card-detail-view').style.display = 'none';
   } catch (error) {
     logError(error);
     alert('Failed to import board. Please check the file format.');
@@ -480,41 +491,43 @@ document.getElementById('reset-board-btn').addEventListener('click', () => {
   }
 
 
-  // Function to create a new card
-  function createCard(listElement, text, description = '') {
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.draggable = true;
+ function createCard(listElement, text, description = '') {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.draggable = true;
 
-    // Add card name
-    const cardName = document.createElement('div');
-    cardName.className = 'card-name';
-    cardName.textContent = text;
-    card.appendChild(cardName);
+  // Add card name
+  const cardName = document.createElement('div');
+  cardName.className = 'card-name';
+  cardName.textContent = text;
+  card.appendChild(cardName);
 
-    // Add description if it exists
-    const descriptionElement = document.createElement('div');
-    descriptionElement.className = 'card-description';
-    descriptionElement.textContent = description || 'Click to add a description...';
-    card.appendChild(descriptionElement);
+  // Add description if it exists
+  const descriptionElement = document.createElement('div');
+  descriptionElement.className = 'card-description';
+  descriptionElement.textContent = description || 'Click to add a description...';
+  card.appendChild(descriptionElement);
 
-    // Add delete button
-    const deleteButton = document.createElement('button');
-    deleteButton.className = 'delete-card-btn';
-    deleteButton.textContent = '×';
-    card.appendChild(deleteButton);
+  // Add delete button
+  const deleteButton = document.createElement('button');
+  deleteButton.className = 'delete-card-btn';
+  deleteButton.textContent = '×';
+  card.appendChild(deleteButton);
 
-    // Add container for tags
-    const cardTags = document.createElement('div');
-    cardTags.className = 'card-tags';
-    card.appendChild(cardTags);
+  // Add container for tags
+  const cardTags = document.createElement('div');
+  cardTags.className = 'card-tags';
+  card.appendChild(cardTags);
 
-    listElement.querySelector('.cards').appendChild(card);
-    return card;
-  }
+  // Initialize checklist data
+  card.dataset.checklist = JSON.stringify([]);
 
-  // Function to save the current state to localStorage
-  function saveState() {
+  listElement.querySelector('.cards').appendChild(card);
+  return card;
+}
+
+  // Update the saveState function to include checklist items
+function saveState() {
   try {
     const boardTitle = document.querySelector('h1').textContent;
     const lists = document.querySelectorAll('.list');
@@ -535,7 +548,8 @@ document.getElementById('reset-board-btn').addEventListener('click', () => {
         tags: Array.from(card.querySelectorAll('.card-tag')).map(tag => ({
           name: tag.textContent.replace(/×/g, ''), // Remove "×" before saving
           color: tag.style.backgroundColor
-        }))
+        })),
+        checklist: card.dataset.checklist ? JSON.parse(card.dataset.checklist) : [] // Save checklist
       }));
       state.lists.push({ id: list.dataset.listId, title, cards });
     });
@@ -544,6 +558,150 @@ document.getElementById('reset-board-btn').addEventListener('click', () => {
     logError(error);
   }
 }
+// Add event listener to close the detailed view window
+document.getElementById('close-card-detail-btn').addEventListener('click', () => {
+  document.getElementById('card-detail-view').style.display = 'none';
+});
+
+// Event listener to show detailed view when clicking on the card's empty space
+listsContainer.addEventListener('click', (e) => {
+  try {
+    const card = e.target.closest('.card');
+    if (card && !e.target.classList.contains('card-name') && !e.target.classList.contains('card-description')) {
+      showCardDetail(card);
+    }
+  } catch (error) {
+    logError(error);
+  }
+});
+let currentCard = null;
+
+// Function to show the detailed view of a card
+function showCardDetail(card) {
+  // Save the current card's state before switching
+  if (currentCard) {
+    saveCurrentCardState();
+  }
+
+  // Set the new card as the current card
+  currentCard = card;
+
+  // Populate the detailed view window with the new card's data
+  const cardName = card.querySelector('.card-name').textContent;
+  const cardDescription = card.querySelector('.card-description').textContent;
+  const cardTags = card.querySelectorAll('.card-tag');
+
+  document.getElementById('card-detail-name').textContent = cardName;
+  document.getElementById('card-detail-description').textContent = cardDescription;
+
+  // Clear previous tags and load new ones
+  const tagsContainer = document.getElementById('card-detail-tags');
+  tagsContainer.innerHTML = '';
+  cardTags.forEach(tag => {
+    const tagElement = document.createElement('div');
+    tagElement.className = 'card-detail-tag';
+    tagElement.textContent = tag.textContent;
+    tagElement.style.backgroundColor = tag.style.backgroundColor;
+    tagsContainer.appendChild(tagElement);
+  });
+
+  // Load checklist items
+  const checklistItems = card.dataset.checklist ? JSON.parse(card.dataset.checklist) : [];
+  const checklistContainer = document.getElementById('checklist-items');
+  checklistContainer.innerHTML = '';
+  checklistItems.forEach(item => {
+    addChecklistItem(checklistContainer, item.text, item.checked);
+  });
+
+  // Show the detailed view window
+  document.getElementById('card-detail-view').style.display = 'block';
+}
+// Function to save the current card's state
+function saveCurrentCardState() {
+  if (currentCard) {
+    const cardName = document.getElementById('card-detail-name').textContent;
+    const cardDescription = document.getElementById('card-detail-description').textContent;
+
+    // Update the smaller card
+    currentCard.querySelector('.card-name').textContent = cardName;
+    currentCard.querySelector('.card-description').textContent = cardDescription;
+
+    // Save checklist items
+    const checklistItems = Array.from(document.querySelectorAll('.checklist-item')).map(item => ({
+      text: item.querySelector('input[type="text"]').value,
+      checked: item.querySelector('input[type="checkbox"]').checked
+    }));
+    currentCard.dataset.checklist = JSON.stringify(checklistItems);
+
+    // Save the state to localStorage
+    saveState();
+  }
+}
+// Function to add a checklist item
+function addChecklistItem(container, text = '', checked = false) {
+  const checklistItem = document.createElement('div');
+  checklistItem.className = 'checklist-item';
+
+  // Add checkbox
+  const checkbox = document.createElement('input');
+  checkbox.type = 'checkbox';
+  checkbox.checked = checked;
+  checkbox.addEventListener('change', () => {
+    textInput.classList.toggle('checked', checkbox.checked);
+    saveState();
+  });
+  checklistItem.appendChild(checkbox);
+
+  // Add text input
+  const textInput = document.createElement('input');
+  textInput.type = 'text';
+  textInput.value = text;
+  textInput.placeholder = 'Enter checklist item...';
+  textInput.classList.toggle('checked', checked); // Apply strikethrough if checked
+  textInput.addEventListener('input', () => saveState()); // Save on text change
+  checklistItem.appendChild(textInput);
+
+  // Add remove button
+  const removeButton = document.createElement('button');
+  removeButton.textContent = '-';
+  removeButton.addEventListener('click', () => {
+    checklistItem.remove();
+    saveState();
+  });
+  checklistItem.appendChild(removeButton);
+
+  container.appendChild(checklistItem);
+}
+
+// Add event listener to add new checklist items
+document.getElementById('add-checklist-item-btn').addEventListener('click', () => {
+  const checklistContainer = document.getElementById('checklist-items');
+  addChecklistItem(checklistContainer);
+  saveState();
+});
+
+// Add event listener to save changes when the detailed view window is closed
+document.getElementById('close-card-detail-btn').addEventListener('click', () => {
+  if (currentCard) {
+    const cardName = document.getElementById('card-detail-name').textContent;
+    const cardDescription = document.getElementById('card-detail-description').textContent;
+
+    // Update the smaller card
+    currentCard.querySelector('.card-name').textContent = cardName;
+    currentCard.querySelector('.card-description').textContent = cardDescription;
+
+    // Save checklist items
+    const checklistItems = Array.from(document.querySelectorAll('.checklist-item')).map(item => ({
+      text: item.querySelector('input[type="text"]').value,
+      checked: item.querySelector('input[type="checkbox"]').checked
+    }));
+    currentCard.dataset.checklist = JSON.stringify(checklistItems);
+
+    saveState();
+  }
+});
+
+
 
   // Function to place the caret at the end of an editable element
   function placeCaretAtEnd(element) {
@@ -555,3 +713,4 @@ document.getElementById('reset-board-btn').addEventListener('click', () => {
     selection.addRange(range);
   }
 });
+
