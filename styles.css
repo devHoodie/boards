@@ -30,7 +30,7 @@ h3 {
 
 h1:focus {
   outline: none;
-  color: #494e4e;
+  color: #494e4e;	
   background-color: #f4f5f7;
   border-radius: 4px;
   padding: 5px;
@@ -92,8 +92,7 @@ h1:focus {
 
 .tag {
   position: relative;
-  padding: 8px 12px 8px 20px;
-  /* Adjust padding for the "X" button */
+  padding: 8px 12px 8px 20px; /* Adjust padding for the "X" button */
   border-radius: 4px;
   cursor: grab;
   color: white;
@@ -106,12 +105,9 @@ h1:focus {
 
 .tag .remove-tag-btn {
   position: absolute;
-  top: 0;
-  /* Center vertically */
-  right: 0;
-  /* Align to the right */
-  transform: translateY(-50%);
-  /* Adjust for vertical centering */
+  top: 0; /* Center vertically */
+  right: 0; /* Align to the right */
+  transform: translateY(-50%); /* Adjust for vertical centering */
   background: #ff4d4d;
   color: white;
   border: none;
@@ -124,8 +120,7 @@ h1:focus {
   font-size: 12px;
   cursor: pointer;
   padding: 0;
-  margin-right: -8px;
-  /* Add some spacing from the edge, if needed */
+  margin-right: -8px; /* Add some spacing from the edge, if needed */
 }
 
 .tag .remove-tag-btn:hover {
@@ -191,24 +186,19 @@ h1:focus {
 }
 
 .card {
-  border-left: 5px solid transparent;
-  /* Default transparent left border */
+  border-left: 5px solid transparent; /* Default transparent left border */
   background-color: white;
   border-radius: 4px;
-  padding: 30px 8px;
-  /* Increase top and bottom padding by 10px each */
+  padding: 30px 8px; /* Increase top and bottom padding by 10px each */
   margin-bottom: 8px;
   box-shadow: 0 1px 0 rgba(9, 30, 66, 0.25);
   cursor: grab;
   position: relative;
-  cursor: pointer;
-  /* Ensure the card itself is clickable */
+  cursor: pointer; /* Ensure the card itself is clickable */
 }
-
 .card.dragging {
   background-color: #93c47d;
 }
-
 .card:active {
   cursor: grabbing;
 }
@@ -216,12 +206,9 @@ h1:focus {
 .card-name {
   font-weight: bold;
   cursor: pointer;
-  position: absolute;
-  /* Set the position to absolute */
-  top: 5px;
-  /* Align to the top */
-  left: 5px;
-  /* Align to the left */
+  position: absolute; /* Set the position to absolute */
+  top: 5px; /* Align to the top */
+  left: 5px; /* Align to the left */
 }
 
 .card-name:focus {
@@ -237,12 +224,9 @@ h1:focus {
   color: #666;
   height: 30px;
   cursor: pointer;
-  left: 0px;
-  /* Align to the left */
-  overflow: hidden;
-  /* Hide overflow */
-  text-overflow: ellipsis;
-  /* Add "..." for overflow */
+  left: 0px; /* Align to the left */
+  overflow: hidden; /* Hide overflow */
+  text-overflow: ellipsis; /* Add "..." for overflow */
 }
 
 
@@ -318,20 +302,17 @@ h1:focus {
 
 /* Detailed View Window Styles */
 .card-detail-view {
-  display: none;
-  /* Hidden by default */
+  display: none; /* Hidden by default */
   position: fixed;
   top: 200px;
   left: 50px;
-  width: 250px;
-  /* Same width as a column */
+  width: 250px; /* Same width as a column */
   height: 400px;
   background-color: white;
   border-radius: 4px;
   padding: 10px;
   box-shadow: 0 1px 0 rgba(9, 30, 66, 0.25);
-  z-index: 1000;
-  /* Ensure it appears above other elements */
+  z-index: 1000; /* Ensure it appears above other elements */
   overflow-y: auto;
 }
 
@@ -386,7 +367,6 @@ h1:focus {
   border-radius: 4px;
   cursor: pointer;
 }
-
 /* Checklist Styles */
 .checklist {
   margin-top: 10px;
@@ -448,3 +428,4 @@ h1:focus {
 #add-checklist-item-btn:hover {
   background-color: #61bd4f;
 }
+
