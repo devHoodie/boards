@@ -6,8 +6,15 @@ body {
 }
 
 .board {
-  max-width: 1200px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column; /* Optional: Keeps child elements stacked vertically */
+  max-width: 90%;
   margin: 0 auto;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .board-header {
@@ -132,6 +139,11 @@ h1:focus {
   gap: 10px;
   overflow-x: auto;
   padding: 10px;
+
+  /* Fix the width and center alignment */
+  max-width: 100%; /* Ensure it does not exceed the parent's width */
+  width: fit-content; /* Set width to match its content */
+  margin: 0 auto; /* Center horizontally */
 }
 
 .list {
@@ -140,7 +152,7 @@ h1:focus {
   padding: 10px;
   width: 250px;
   min-width: 250px;
-  height: 800px;
+  height: 900px;
   display: flex;
   flex-direction: column;
 }
