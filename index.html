@@ -1,92 +1,95 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Board</title>
-  <link rel="stylesheet" href="styles.css?v=1.0.1">
-</head>
-<body>
-  <div class="board">
-    <div class="board-header">
-      <h1 contenteditable="true">My Board</h1>
-      <div class="import-export">
-        <button id="export-btn">Export</button>
-        <input type="file" id="import-file" accept=".json" style="display: none;" />
-        <button id="import-btn">Import</button>
-	<button id="reset-board-btn">Reset Board</button> <!-- Reset button -->
-      </div>
 
-<!-- Tag Creation Section -->
-    <div class="tag-creation">
-	  <input type="text" id="tag-name" placeholder="Tag Name">
-      <input type="color" id="tag-color" />
-      <button id="create-tag-btn">Create Tag</button>
-    </div>
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>My Board</title>
+		<link rel="stylesheet" href="styles.css?v=1.0.1">
+	</head>
 
-    <!-- Available Tags Section -->
-    <div class="tags-container">
-      <h3>Available Tags</h3>
-      <div class="tags-list"></div>
-    </div>
-    </div>
+	<body>
+		<div class="board">
+			<div class="board-header">
+				<h1 contenteditable="true">My Board</h1>
+				<div class="import-export">
+					<button id="export-btn">Export</button>
+					<input type="file" id="import-file" accept=".json"
+						style="display: none;" />
+					<button id="import-btn">Import</button>
+					<button id="reset-board-btn">Reset Board</button>
+					<!-- Reset button -->
+				</div>
 
-    
+				<!-- Tag Creation Section -->
+				<div class="tag-creation">
+					<input type="text" id="tag-name" placeholder="Tag Name">
+					<input type="color" id="tag-color" />
+					<button id="create-tag-btn">Create Tag</button>
+				</div>
 
-    <div class="lists-container">
-      <!-- 5 fixed columns with updated names -->
-      <div class="list" data-list-id="1">
-        <h2 contenteditable="true">BACKLOG</h2>
-        <input type="text" class="add-card-input" placeholder="Add a card..." />
-        <button class="add-card-btn">Add Card</button>
-        <div class="cards"></div>
-      </div>
-      <div class="list" data-list-id="2">
-        <h2 contenteditable="true">NEXT UP</h2>
-        <input type="text" class="add-card-input" placeholder="Add a card..." />
-        <button class="add-card-btn">Add Card</button>
-        <div class="cards"></div>
-      </div>
-      <div class="list" data-list-id="3">
-        <h2 contenteditable="true">IN PROGRESS</h2>
-        <input type="text" class="add-card-input" placeholder="Add a card..." />
-        <button class="add-card-btn">Add Card</button>
-        <div class="cards"></div>
-      </div>
-      <div class="list" data-list-id="4">
-        <h2 contenteditable="true">TESTING</h2>
-        <input type="text" class="add-card-input" placeholder="Add a card..." />
-        <button class="add-card-btn">Add Card</button>
-        <div class="cards"></div>
-      </div>
-      <div class="list" data-list-id="5">
-        <h2 contenteditable="true">DONE</h2>
-        <input type="text" class="add-card-input" placeholder="Add a card..." />
-        <button class="add-card-btn">Add Card</button>
-        <div class="cards"></div>
-      </div>
-    </div>
-  </div>
+				<!-- Available Tags Section -->
+				<div class="tags-container">
+					<h3>Available Tags</h3>
+					<div class="tags-list"></div>
+				</div>
+			</div>
 
-  <!-- Custom Error Console -->
-  <div class="error-console">
-    <h3>Error Console</h3>
-    <div class="error-log"></div>
-  </div>
-<!-- Detailed View Window -->
-<div id="card-detail-view" class="card-detail-view">
-  <div class="card-detail-header draggable-handle">
-    <h2 id="card-detail-name" contenteditable="true"></h2>
-    <button id="close-card-detail-btn">×</button>
-  </div>
-  <div id="card-detail-description" contenteditable="true"></div>
-  <div id="card-detail-tags"></div>
-  <div class="checklist">
-    <h3>Checklist</h3>
-    <div id="checklist-items"></div>
-    <button id="add-checklist-item-btn">+ Add Item</button>
-  </div>
-</div>
-  <script src="script.js?v=1.0.1"></script>
-</body>
+			<div class="lists-container">
+				<!-- 5 fixed columns with updated names -->
+				<div class="list" data-list-id="1">
+					<h2 contenteditable="true">BACKLOG</h2>
+					<input type="text" class="add-card-input" placeholder="Add a card..." />
+					<button class="add-card-btn">Add Card</button>
+					<div class="cards"></div>
+				</div>
+				<div class="list" data-list-id="2">
+					<h2 contenteditable="true">NEXT UP</h2>
+					<input type="text" class="add-card-input" placeholder="Add a card..." />
+					<button class="add-card-btn">Add Card</button>
+					<div class="cards"></div>
+				</div>
+				<div class="list" data-list-id="3">
+					<h2 contenteditable="true">IN PROGRESS</h2>
+					<input type="text" class="add-card-input" placeholder="Add a card..." />
+					<button class="add-card-btn">Add Card</button>
+					<div class="cards"></div>
+				</div>
+				<div class="list" data-list-id="4">
+					<h2 contenteditable="true">TESTING</h2>
+					<input type="text" class="add-card-input" placeholder="Add a card..." />
+					<button class="add-card-btn">Add Card</button>
+					<div class="cards"></div>
+				</div>
+				<div class="list" data-list-id="5">
+					<h2 contenteditable="true">DONE</h2>
+					<input type="text" class="add-card-input" placeholder="Add a card..." />
+					<button class="add-card-btn">Add Card</button>
+					<div class="cards"></div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Custom Error Console -->
+		<div class="error-console">
+			<h3>Error Console</h3>
+			<div class="error-log"></div>
+		</div>
+		<!-- Detailed View Window -->
+		<div id="card-detail-view" class="card-detail-view">
+			<div class="card-detail-header draggable-handle">
+				<h2 id="card-detail-name" contenteditable="true"></h2>
+				<button id="close-card-detail-btn">×</button>
+			</div>
+			<div id="card-detail-description" contenteditable="true"></div>
+			<div id="card-detail-tags"></div>
+			<div class="checklist">
+				<h3>Checklist</h3>
+				<div id="checklist-items"></div>
+				<button id="add-checklist-item-btn">+ Add Item</button>
+			</div>
+		</div>
+		<script src="script.js?v=1.0.1"></script>
+	</body>
+
 </html>
