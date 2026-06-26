@@ -1,95 +1,223 @@
 <!DOCTYPE html>
 <html lang="en">
 
-	<head>
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<title>My Board</title>
-		<link rel="stylesheet" href="styles.css?v=1.0.1">
-	</head>
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Work Board</title>
+	<meta http-equiv="Content-Security-Policy"
+		content="script-src 'self' https://apis.google.com https://accounts.google.com https://www.googleapis.com 'unsafe-inline'; frame-src https://accounts.google.com; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com;">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="styles.css">
+</head>
 
-	<body>
-		<div class="board">
-			<div class="board-header">
-				<h1 contenteditable="true">My Board</h1>
-				<div class="import-export">
-					<button id="export-btn">Export</button>
-					<input type="file" id="import-file" accept=".json"
-						style="display: none;" />
-					<button id="import-btn">Import</button>
-					<button id="reset-board-btn">Reset Board</button>
-					<!-- Reset button -->
-				</div>
-
-				<!-- Tag Creation Section -->
-				<div class="tag-creation">
-					<input type="text" id="tag-name" placeholder="Tag Name">
-					<input type="color" id="tag-color" />
-					<button id="create-tag-btn">Create Tag</button>
-				</div>
-
-				<!-- Available Tags Section -->
-				<div class="tags-container">
-					<h3>Available Tags</h3>
-					<div class="tags-list"></div>
+<body>
+	<div class="app">
+		<header class="topbar">
+			<h1 class="board-title" contenteditable="true" spellcheck="false">My Board</h1>
+			<div class="topbar-center">
+				<div class="search-wrap">
+					<svg class="search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+						<path d="M7 12A5 5 0 1 0 7 2a5 5 0 0 0 0 10Zm6 1-3.5-3.5" stroke="currentColor" stroke-width="1.5"
+							stroke-linecap="round" />
+					</svg>
+					<input type="search" id="search-input" class="search-input" placeholder="Search cards…"
+						autocomplete="off" />
 				</div>
 			</div>
+			<div class="topbar-actions">
+				<button type="button" id="tags-drawer-btn" class="btn btn-ghost">Tags</button>
+				<div class="popover-wrap">
+					<button type="button" id="board-menu-btn" class="btn btn-ghost" aria-expanded="false"
+						aria-haspopup="true">Board ▾</button>
+					<div id="board-menu" class="popover" hidden>
+						<button type="button" id="export-btn" class="popover-item">Export JSON</button>
+						<button type="button" id="import-btn" class="popover-item">Import JSON</button>
+						<input type="file" id="import-file" accept=".json" hidden />
+						<hr class="popover-divider" />
+						<button type="button" id="reset-board-btn" class="popover-item popover-item-danger">Reset
+							Board</button>
+						<hr class="popover-divider" />
+						<div class="popover-section">
+							<span class="popover-label">Google Drive</span>
+							<div id="g_id_signin"></div>
+							<button type="button" id="google-save-btn" class="popover-item" hidden>Save to Drive</button>
+							<button type="button" id="google-load-btn" class="popover-item" hidden>Load from
+								Drive</button>
+							<button type="button" id="signout_button" class="popover-item" hidden>Sign Out</button>
+						</div>
+					</div>
+				</div>
+				<span id="save-status" class="save-status" aria-live="polite">Saved</span>
+			</div>
+		</header>
 
+		<main class="board-main">
 			<div class="lists-container">
-				<!-- 5 fixed columns with updated names -->
 				<div class="list" data-list-id="1">
-					<h2 contenteditable="true">BACKLOG</h2>
-					<input type="text" class="add-card-input" placeholder="Add a card..." />
-					<button class="add-card-btn">Add Card</button>
+					<div class="list-header">
+						<h2 contenteditable="true" spellcheck="false">BACKLOG</h2>
+						<span class="list-count">0</span>
+					</div>
 					<div class="cards"></div>
+					<div class="add-card-area">
+						<button type="button" class="add-card-toggle">+ Add a card</button>
+						<div class="add-card-form" hidden>
+							<textarea class="add-card-input" placeholder="Enter card title…" rows="2"></textarea>
+							<div class="add-card-actions">
+								<button type="button" class="btn btn-primary add-card-btn">Add card</button>
+								<button type="button" class="btn btn-ghost add-card-cancel">Cancel</button>
+							</div>
+						</div>
+					</div>
 				</div>
 				<div class="list" data-list-id="2">
-					<h2 contenteditable="true">NEXT UP</h2>
-					<input type="text" class="add-card-input" placeholder="Add a card..." />
-					<button class="add-card-btn">Add Card</button>
+					<div class="list-header">
+						<h2 contenteditable="true" spellcheck="false">NEXT UP</h2>
+						<span class="list-count">0</span>
+					</div>
 					<div class="cards"></div>
+					<div class="add-card-area">
+						<button type="button" class="add-card-toggle">+ Add a card</button>
+						<div class="add-card-form" hidden>
+							<textarea class="add-card-input" placeholder="Enter card title…" rows="2"></textarea>
+							<div class="add-card-actions">
+								<button type="button" class="btn btn-primary add-card-btn">Add card</button>
+								<button type="button" class="btn btn-ghost add-card-cancel">Cancel</button>
+							</div>
+						</div>
+					</div>
 				</div>
 				<div class="list" data-list-id="3">
-					<h2 contenteditable="true">IN PROGRESS</h2>
-					<input type="text" class="add-card-input" placeholder="Add a card..." />
-					<button class="add-card-btn">Add Card</button>
+					<div class="list-header">
+						<h2 contenteditable="true" spellcheck="false">IN PROGRESS</h2>
+						<span class="list-count">0</span>
+					</div>
 					<div class="cards"></div>
+					<div class="add-card-area">
+						<button type="button" class="add-card-toggle">+ Add a card</button>
+						<div class="add-card-form" hidden>
+							<textarea class="add-card-input" placeholder="Enter card title…" rows="2"></textarea>
+							<div class="add-card-actions">
+								<button type="button" class="btn btn-primary add-card-btn">Add card</button>
+								<button type="button" class="btn btn-ghost add-card-cancel">Cancel</button>
+							</div>
+						</div>
+					</div>
 				</div>
 				<div class="list" data-list-id="4">
-					<h2 contenteditable="true">TESTING</h2>
-					<input type="text" class="add-card-input" placeholder="Add a card..." />
-					<button class="add-card-btn">Add Card</button>
+					<div class="list-header">
+						<h2 contenteditable="true" spellcheck="false">TESTING</h2>
+						<span class="list-count">0</span>
+					</div>
 					<div class="cards"></div>
+					<div class="add-card-area">
+						<button type="button" class="add-card-toggle">+ Add a card</button>
+						<div class="add-card-form" hidden>
+							<textarea class="add-card-input" placeholder="Enter card title…" rows="2"></textarea>
+							<div class="add-card-actions">
+								<button type="button" class="btn btn-primary add-card-btn">Add card</button>
+								<button type="button" class="btn btn-ghost add-card-cancel">Cancel</button>
+							</div>
+						</div>
+					</div>
 				</div>
 				<div class="list" data-list-id="5">
-					<h2 contenteditable="true">DONE</h2>
-					<input type="text" class="add-card-input" placeholder="Add a card..." />
-					<button class="add-card-btn">Add Card</button>
+					<div class="list-header">
+						<h2 contenteditable="true" spellcheck="false">DONE</h2>
+						<span class="list-count">0</span>
+					</div>
 					<div class="cards"></div>
+					<div class="add-card-area">
+						<button type="button" class="add-card-toggle">+ Add a card</button>
+						<div class="add-card-form" hidden>
+							<textarea class="add-card-input" placeholder="Enter card title…" rows="2"></textarea>
+							<div class="add-card-actions">
+								<button type="button" class="btn btn-primary add-card-btn">Add card</button>
+								<button type="button" class="btn btn-ghost add-card-cancel">Cancel</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</main>
+	</div>
+
+	<!-- Tags drawer -->
+	<div id="tags-drawer" class="drawer" hidden aria-hidden="true">
+		<div class="drawer-backdrop" data-drawer-close></div>
+		<aside class="drawer-panel">
+			<div class="drawer-header">
+				<h2>Tags</h2>
+				<button type="button" class="btn btn-icon drawer-close" data-drawer-close aria-label="Close">×</button>
+			</div>
+			<div class="drawer-body">
+				<div class="tag-creation">
+					<input type="text" id="tag-name" placeholder="Tag name" />
+					<input type="color" id="tag-color" value="#58a6ff" />
+					<button type="button" id="create-tag-btn" class="btn btn-primary">Create</button>
+				</div>
+				<p class="drawer-hint">Drag tags onto cards to apply them.</p>
+				<div class="tags-list"></div>
+			</div>
+		</aside>
+	</div>
+
+	<!-- Card detail modal -->
+	<div id="card-modal" class="modal" hidden aria-hidden="true">
+		<div class="modal-backdrop" data-modal-close></div>
+		<div class="modal-panel" role="dialog" aria-labelledby="card-detail-name">
+			<div class="modal-header">
+				<h2 id="card-detail-name" contenteditable="true" spellcheck="false"></h2>
+				<button type="button" id="close-card-detail-btn" class="btn btn-icon" data-modal-close
+					aria-label="Close">×</button>
+			</div>
+			<div class="modal-body">
+				<label class="field-label">Description</label>
+				<div id="card-detail-description" class="card-detail-description" contenteditable="true"
+					spellcheck="false"></div>
+				<div id="card-detail-tags" class="card-detail-tags"></div>
+				<div class="checklist">
+					<h3>Checklist</h3>
+					<div id="checklist-items"></div>
+					<button type="button" id="add-checklist-item-btn" class="btn btn-ghost">+ Add item</button>
 				</div>
 			</div>
 		</div>
+	</div>
 
-		<!-- Custom Error Console -->
-		<div class="error-console">
-			<h3>Error Console</h3>
+	<!-- Google Drive file picker modal -->
+	<div id="drive-modal" class="modal" hidden aria-hidden="true">
+		<div class="modal-backdrop" data-drive-modal-close></div>
+		<div class="modal-panel modal-panel-sm" role="dialog">
+			<div class="modal-header">
+				<h2>Select a board to load</h2>
+				<button type="button" class="btn btn-icon" data-drive-modal-close aria-label="Close">×</button>
+			</div>
+			<div class="modal-body">
+				<div id="drive-file-list" class="drive-file-list"></div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Toast container -->
+	<div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+	<!-- Error console -->
+	<div class="error-console" id="error-console">
+		<button type="button" class="error-console-toggle" id="error-console-toggle">
+			<span>Error log</span>
+			<span class="error-count" id="error-count" hidden>0</span>
+		</button>
+		<div class="error-log-wrap" hidden>
 			<div class="error-log"></div>
 		</div>
-		<!-- Detailed View Window -->
-		<div id="card-detail-view" class="card-detail-view">
-			<div class="card-detail-header draggable-handle">
-				<h2 id="card-detail-name" contenteditable="true"></h2>
-				<button id="close-card-detail-btn">×</button>
-			</div>
-			<div id="card-detail-description" contenteditable="true"></div>
-			<div id="card-detail-tags"></div>
-			<div class="checklist">
-				<h3>Checklist</h3>
-				<div id="checklist-items"></div>
-				<button id="add-checklist-item-btn">+ Add Item</button>
-			</div>
-		</div>
-		<script src="script.js?v=1.0.1"></script>
-	</body>
+	</div>
+
+	<script src="https://accounts.google.com/gsi/client" async defer></script>
+	<script type="module" src="js/main.js"></script>
+</body>
 
 </html>
