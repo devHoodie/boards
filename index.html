@@ -6,7 +6,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Work Board</title>
 	<meta http-equiv="Content-Security-Policy"
-		content="default-src 'self'; script-src 'self' https://apis.google.com https://accounts.google.com https://www.googleapis.com https://esm.sh 'unsafe-inline'; frame-src https://accounts.google.com; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; connect-src 'self' https://apis.google.com https://www.googleapis.com https://accounts.google.com https://esm.sh wss://signaling.yjs.dev wss://y-webrtc-signaling-eu.herokuapp.com wss://y-webrtc-signaling-us.herokuapp.com https://signaling.yjs.dev stun: turn:;">
+		content="default-src 'self'; script-src 'self' https://esm.sh 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; connect-src 'self' https://esm.sh wss://signaling.yjs.dev wss://y-webrtc-signaling-eu.herokuapp.com wss://y-webrtc-signaling-us.herokuapp.com https://signaling.yjs.dev stun: turn:;">
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -49,15 +49,6 @@
 								room</button>
 							<hr class="popover-divider" />
 							<button type="button" id="export-btn-collab" class="popover-item">Export JSON</button>
-						</div>
-						<hr class="popover-divider" />
-						<div class="popover-section">
-							<span class="popover-label">Google Drive</span>
-							<div id="g_id_signin"></div>
-							<button type="button" id="google-save-btn" class="popover-item" hidden>Save to Drive</button>
-							<button type="button" id="google-load-btn" class="popover-item" hidden>Load from
-								Drive</button>
-							<button type="button" id="signout_button" class="popover-item" hidden>Sign Out</button>
 						</div>
 					</div>
 				</div>
@@ -196,16 +187,27 @@
 		</div>
 	</div>
 
-	<!-- Google Drive file picker modal -->
-	<div id="drive-modal" class="modal" hidden aria-hidden="true">
-		<div class="modal-backdrop" data-drive-modal-close></div>
-		<div class="modal-panel modal-panel-sm" role="dialog">
+	<!-- Merge review modal -->
+	<div id="merge-modal" class="modal" hidden aria-hidden="true">
+		<div class="modal-backdrop"></div>
+		<div class="modal-panel modal-panel-md" role="dialog" aria-labelledby="merge-modal-title">
 			<div class="modal-header">
-				<h2>Select a board to load</h2>
-				<button type="button" class="btn btn-icon" data-drive-modal-close aria-label="Close">×</button>
+				<h2 id="merge-modal-title">Sync changes</h2>
 			</div>
-			<div class="modal-body">
-				<div id="drive-file-list" class="drive-file-list"></div>
+			<div class="modal-body merge-modal-body">
+				<section class="merge-section">
+					<h3>Auto-merged</h3>
+					<ul id="merge-auto-list" class="merge-auto-list"></ul>
+				</section>
+				<section class="merge-section">
+					<h3>Conflicts</h3>
+					<div id="merge-conflicts" class="merge-conflicts"></div>
+				</section>
+				<div class="merge-actions">
+					<button type="button" id="merge-apply-btn" class="btn btn-primary">Apply merge</button>
+					<button type="button" id="merge-use-live-btn" class="btn btn-ghost">Use live room only</button>
+					<button type="button" id="merge-use-mine-btn" class="btn btn-ghost">Use my offline copy only</button>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -224,7 +226,6 @@
 		</div>
 	</div>
 
-	<script src="https://accounts.google.com/gsi/client" async defer></script>
 	<script type="module" src="js/main.js"></script>
 </body>
 

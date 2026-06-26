@@ -36,11 +36,12 @@ function createCardMeta (card) {
   return meta
 }
 
-export function createCard (listElement, text, description = '') {
+export function createCard (listElement, text, description = '', meta = {}) {
   const card = document.createElement('div')
   card.className = 'card'
   card.draggable = true
-  card.dataset.checklist = JSON.stringify([])
+  card.dataset.cardId = meta.id || crypto.randomUUID()
+  card.dataset.checklist = JSON.stringify(meta.checklist || [])
 
   const deleteButton = document.createElement('button')
   deleteButton.type = 'button'

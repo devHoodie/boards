@@ -1,5 +1,5 @@
 import { $, DESCRIPTION_PLACEHOLDER, placeCaretAtEnd, logError } from './utils.js'
-import { saveState, loadState, applyImportedState, resetBoard, getStoredState } from './state.js'
+import { saveState, loadState, applyImportedState, resetBoard, getStoredState, markCardDeleted } from './state.js'
 import { isCollabMode } from './mode.js'
 import {
   createCard,
@@ -13,10 +13,10 @@ import { initDragDrop } from './drag-drop.js'
 import { initSearch } from './search.js'
 import { initModals, closeModal } from './ui/modal.js'
 import { showToast } from './ui/toast.js'
-import { initGoogleDrive, ensureGoogleButton } from './google-drive.js'
 
 const boardHelpers = {
   createTag,
+  clearTags,
   createCard,
   applyTagToCard,
   updateChecklistBadge
@@ -31,7 +31,6 @@ function initBoardMenu () {
     const open = !menu.hidden
     menu.hidden = open
     menuBtn.setAttribute('aria-expanded', String(!open))
-    if (!open) ensureGoogleButton()
   })
 
   document.addEventListener('click', e => {
@@ -131,7 +130,11 @@ function initListEvents () {
   listsContainer.addEventListener('click', e => {
     if (e.target.classList.contains('delete-card-btn')) {
       e.stopPropagation()
-      e.target.closest('.card')?.remove()
+      const card = e.target.closest('.card')
+      if (isCollabMode && card?.dataset.cardId) {
+        markCardDeleted(card.dataset.cardId)
+      }
+      card?.remove()
       saveState()
       return
     }
@@ -313,7 +316,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   initBoardTitle()
   initImportExport()
   initChecklist()
-  initGoogleDrive()
 
   if (!isCollabMode) {
     loadState(boardHelpers)

@@ -3,18 +3,24 @@ import {
   enableCollabMode,
   collectBoardState,
   applyImportedState,
-  setSaveStatus
+  setSaveStatus,
+  flushCollabState,
+  setLastCollectedState
 } from './state.js'
 import { showToast } from './ui/toast.js'
 import { roomId } from './mode.js'
+import { saveRoomCache, loadRoomCache } from './room-cache.js'
+import { mergeBoardStates, normalizeState, statesEqual } from './merge.js'
+import { showMergeReview } from './ui/merge-modal.js'
 
 const SEED_URL = 'data/seed-board.json'
-const SEED_TIMEOUT_MS = 3000
+const PEER_WAIT_MS = 3000
 
 let lastSyncedJson = ''
 let yMap = null
 let provider = null
 let applyingRemote = false
+let joinResolved = false
 
 async function loadYjsStack () {
   const [Y, webrtc, indexeddb] = await Promise.all([
@@ -23,6 +29,11 @@ async function loadYjsStack () {
     import('https://esm.sh/y-indexeddb@9.0.12')
   ])
   return { Y, WebrtcProvider: webrtc.WebrtcProvider, IndexeddbPersistence: indexeddb.IndexeddbPersistence }
+}
+
+function getRemotePeerCount () {
+  if (!provider?.room?.webrtcConns) return 0
+  return provider.room.webrtcConns.size
 }
 
 function updatePeerStatus (webrtcProvider, event) {
@@ -46,15 +57,23 @@ function pushToYjs (state) {
 }
 
 function applyRemoteState (json, boardHelpers) {
-  if (!json || json === lastSyncedJson) return
+  if (!json || applyingRemote || !joinResolved) return
+  if (json === lastSyncedJson) return
+
   try {
     applyingRemote = true
-    lastSyncedJson = json
-    const state = JSON.parse(json)
-    if (state?.lists) {
-      applyImportedState(state, boardHelpers, { persistLocal: false })
-      setSaveStatus('Synced')
+    const remote = normalizeState(JSON.parse(json))
+    const current = normalizeState(collectBoardState())
+    const { merged } = mergeBoardStates(current, remote)
+
+    if (statesEqual(current, merged)) {
+      lastSyncedJson = json
+      return
     }
+
+    lastSyncedJson = JSON.stringify(merged)
+    applyImportedState(merged, boardHelpers, { persistLocal: false })
+    setSaveStatus('Synced')
   } catch (error) {
     logError(error)
   } finally {
@@ -72,43 +91,118 @@ async function fetchSeedState () {
   }
 }
 
-async function waitForInitialState (ymap, boardHelpers) {
-  const existing = ymap.get('state')
-  if (existing) {
-    applyRemoteState(existing, boardHelpers)
+function waitMs (ms) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+function parseLiveState () {
+  const json = yMap?.get('state')
+  if (!json) return null
+  try {
+    return normalizeState(JSON.parse(json))
+  } catch {
+    return null
+  }
+}
+
+async function resolveJoinState (room, boardHelpers) {
+  await waitMs(PEER_WAIT_MS)
+
+  const cacheRaw = loadRoomCache(room)
+  const cache = cacheRaw ? normalizeState(cacheRaw) : null
+  const live = parseLiveState()
+  const remotePeers = getRemotePeerCount()
+
+  const applyAndTrack = (state) => {
+    applyImportedState(state, boardHelpers, { persistLocal: false })
+    const json = JSON.stringify(state)
+    lastSyncedJson = json
+    setLastCollectedState(state)
+  }
+
+  if (remotePeers === 0) {
+    if (cache?.lists?.length) {
+      applyAndTrack(cache)
+      pushToYjs(cache)
+      saveRoomCache(room, cache)
+      setSaveStatus('Live')
+    } else if (live?.lists?.length) {
+      applyAndTrack(live)
+      setSaveStatus('Live')
+    } else {
+      const seed = await fetchSeedState()
+      if (seed?.lists) {
+        const normalized = normalizeState(seed)
+        applyAndTrack(normalized)
+        pushToYjs(normalized)
+        setSaveStatus('Seed loaded')
+      } else {
+        setSaveStatus('Live')
+      }
+    }
     return
   }
 
-  setSaveStatus('Connecting…')
-  const start = Date.now()
-
-  await new Promise(resolve => {
-    const check = () => {
-      const json = ymap.get('state')
-      if (json) {
-        applyRemoteState(json, boardHelpers)
-        resolve()
-        return
-      }
-      if (Date.now() - start >= SEED_TIMEOUT_MS) {
-        resolve()
-        return
-      }
-      setTimeout(check, 200)
+  if (!cache) {
+    if (live?.lists?.length) {
+      applyAndTrack(live)
     }
-    check()
-  })
-
-  if (ymap.get('state')) return
-
-  const seed = await fetchSeedState()
-  if (seed?.lists) {
-    applyImportedState(seed, boardHelpers, { persistLocal: false })
-    pushToYjs(collectBoardState())
-    setSaveStatus('Seed loaded')
-  } else {
-    setSaveStatus('Live')
+    setSaveStatus('Synced')
+    return
   }
+
+  if (!live?.lists?.length) {
+    applyAndTrack(cache)
+    pushToYjs(cache)
+    saveRoomCache(room, cache)
+    setSaveStatus('Synced')
+    return
+  }
+
+  if (statesEqual(cache, live)) {
+    applyAndTrack(live)
+    setSaveStatus('Synced')
+    return
+  }
+
+  const mergeResult = mergeBoardStates(cache, live)
+
+  await showMergeReview({
+    roomId: room,
+    localState: cache,
+    remoteState: live,
+    mergeResult,
+    onApply: (merged) => {
+      const normalized = normalizeState(merged)
+      applyAndTrack(normalized)
+      pushToYjs(normalized)
+      saveRoomCache(room, normalized)
+      setSaveStatus('Synced')
+    },
+    onUseLive: () => {
+      applyAndTrack(live)
+      saveRoomCache(room, live)
+      setSaveStatus('Synced')
+    },
+    onUseMine: () => {
+      applyAndTrack(cache)
+      pushToYjs(cache)
+      saveRoomCache(room, cache)
+      setSaveStatus('Synced')
+    }
+  })
+}
+
+function setupPagehideCache (room) {
+  window.addEventListener('pagehide', () => {
+    try {
+      const state = flushCollabState()
+      saveRoomCache(room, state)
+      setSaveStatus('Offline cache saved')
+    } catch (error) {
+      logError(error)
+    }
+  })
 }
 
 export async function initCollab (room, boardHelpers) {
@@ -158,8 +252,10 @@ export async function initCollab (room, boardHelpers) {
     provider.on('synced', () => updatePeerStatus(provider))
 
     await persistence.whenSynced
-    await waitForInitialState(yMap, boardHelpers)
+    await resolveJoinState(room, boardHelpers)
+    joinResolved = true
     updatePeerStatus(provider)
+    setupPagehideCache(room)
   } catch (error) {
     logError(error)
     if (statusEl) {
