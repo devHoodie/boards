@@ -49,11 +49,13 @@ export function initModals () {
       const modal = e.target.closest('.modal')
       if (modal) closeModal(modal.id)
     }
+    if (e.target.matches('[data-drive-modal-close]')) {
+      closeModal('drive-modal')
+    }
   })
 
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && activeModal) {
-      if (activeModal.id === 'merge-modal') return
       closeModal(activeModal.id)
     }
   })

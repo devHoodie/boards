@@ -1,6 +1,5 @@
-import { $, DESCRIPTION_PLACEHOLDER, generateId } from './utils.js'
+import { $, DESCRIPTION_PLACEHOLDER } from './utils.js'
 import { saveState } from './state.js'
-import { isCollabMode } from './mode.js'
 import { openModal } from './ui/modal.js'
 import { renderModalTagPicker, refreshModalTags } from './tags.js'
 
@@ -37,18 +36,11 @@ function createCardMeta (card) {
   return meta
 }
 
-export function createCard (listElement, text, description = '', meta = {}) {
+export function createCard (listElement, text, description = '') {
   const card = document.createElement('div')
   card.className = 'card'
   card.draggable = true
-  if (isCollabMode || meta.id) {
-    card.dataset.cardId = meta.id || generateId()
-  }
-  if (meta.checklist?.length) {
-    card.dataset.checklist = JSON.stringify(meta.checklist)
-  } else {
-    card.dataset.checklist = JSON.stringify([])
-  }
+  card.dataset.checklist = JSON.stringify([])
 
   const deleteButton = document.createElement('button')
   deleteButton.type = 'button'
