@@ -6,7 +6,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Work Board</title>
 	<meta http-equiv="Content-Security-Policy"
-		content="script-src 'self' https://apis.google.com https://accounts.google.com https://www.googleapis.com 'unsafe-inline'; frame-src https://accounts.google.com; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com;">
+		content="default-src 'self'; script-src 'self' https://apis.google.com https://accounts.google.com https://www.googleapis.com https://esm.sh 'unsafe-inline'; frame-src https://accounts.google.com; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; connect-src 'self' https://apis.google.com https://www.googleapis.com https://accounts.google.com https://esm.sh wss://signaling.yjs.dev wss://y-webrtc-signaling-eu.herokuapp.com wss://y-webrtc-signaling-us.herokuapp.com https://signaling.yjs.dev stun: turn:;">
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -28,17 +28,28 @@
 				</div>
 			</div>
 			<div class="topbar-actions">
-				<button type="button" id="tags-drawer-btn" class="btn btn-ghost">Tags</button>
 				<div class="popover-wrap">
 					<button type="button" id="board-menu-btn" class="btn btn-ghost" aria-expanded="false"
 						aria-haspopup="true">Board ▾</button>
 					<div id="board-menu" class="popover" hidden>
-						<button type="button" id="export-btn" class="popover-item">Export JSON</button>
-						<button type="button" id="import-btn" class="popover-item">Import JSON</button>
-						<input type="file" id="import-file" accept=".json" hidden />
-						<hr class="popover-divider" />
-						<button type="button" id="reset-board-btn" class="popover-item popover-item-danger">Reset
-							Board</button>
+						<div id="local-menu-section">
+							<button type="button" id="join-shared-room-btn" class="popover-item">Join shared room</button>
+							<hr class="popover-divider" />
+							<button type="button" id="export-btn" class="popover-item">Export JSON</button>
+							<button type="button" id="import-btn" class="popover-item">Import JSON</button>
+							<input type="file" id="import-file" accept=".json" hidden />
+							<hr class="popover-divider" />
+							<button type="button" id="reset-board-btn" class="popover-item popover-item-danger">Reset
+								Board</button>
+						</div>
+						<div id="collab-menu-section" hidden>
+							<button type="button" id="copy-room-link-btn" class="popover-item">Copy room link</button>
+							<button type="button" id="leave-room-btn" class="popover-item">Leave shared room</button>
+							<button type="button" id="reset-room-btn" class="popover-item popover-item-danger">Reset shared
+								room</button>
+							<hr class="popover-divider" />
+							<button type="button" id="export-btn-collab" class="popover-item">Export JSON</button>
+						</div>
 						<hr class="popover-divider" />
 						<div class="popover-section">
 							<span class="popover-label">Google Drive</span>
@@ -50,12 +61,14 @@
 						</div>
 					</div>
 				</div>
+				<span id="collab-status" class="collab-status" hidden aria-live="polite"></span>
 				<span id="save-status" class="save-status" aria-live="polite">Saved</span>
 			</div>
 		</header>
 
-		<main class="board-main">
-			<div class="lists-container">
+		<div class="board-layout">
+			<main class="board-main">
+				<div class="lists-container">
 				<div class="list" data-list-id="1">
 					<div class="list-header">
 						<h2 contenteditable="true" spellcheck="false">BACKLOG</h2>
@@ -142,27 +155,21 @@
 					</div>
 				</div>
 			</div>
-		</main>
-	</div>
+			</main>
 
-	<!-- Tags drawer -->
-	<div id="tags-drawer" class="drawer" hidden aria-hidden="true">
-		<div class="drawer-backdrop" data-drawer-close></div>
-		<aside class="drawer-panel">
-			<div class="drawer-header">
-				<h2>Tags</h2>
-				<button type="button" class="btn btn-icon drawer-close" data-drawer-close aria-label="Close">×</button>
-			</div>
-			<div class="drawer-body">
+			<aside class="tags-panel" aria-label="Tags">
+				<h2 class="tags-panel-title">Tags</h2>
 				<div class="tag-creation">
-					<input type="text" id="tag-name" placeholder="Tag name" />
-					<input type="color" id="tag-color" value="#58a6ff" />
-					<button type="button" id="create-tag-btn" class="btn btn-primary">Create</button>
+					<input type="text" id="tag-name" placeholder="New tag name" />
+					<div class="tag-color-row">
+						<input type="color" id="tag-color" value="#58a6ff" title="Tag color" />
+						<button type="button" id="create-tag-btn" class="btn btn-primary">Create tag</button>
+					</div>
 				</div>
-				<p class="drawer-hint">Drag tags onto cards to apply them.</p>
+				<p class="tags-panel-hint">Drag onto cards, or click a tag then click a card.</p>
 				<div class="tags-list"></div>
-			</div>
-		</aside>
+			</aside>
+		</div>
 	</div>
 
 	<!-- Card detail modal -->
@@ -179,6 +186,7 @@
 				<div id="card-detail-description" class="card-detail-description" contenteditable="true"
 					spellcheck="false"></div>
 				<div id="card-detail-tags" class="card-detail-tags"></div>
+				<div id="card-available-tags" class="card-available-tags"></div>
 				<div class="checklist">
 					<h3>Checklist</h3>
 					<div id="checklist-items"></div>

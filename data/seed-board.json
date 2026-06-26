@@ -1,0 +1,11 @@
+{
+  "boardTitle": "Shared Board",
+  "tags": [],
+  "lists": [
+    { "id": "1", "title": "BACKLOG", "cards": [] },
+    { "id": "2", "title": "NEXT UP", "cards": [] },
+    { "id": "3", "title": "IN PROGRESS", "cards": [] },
+    { "id": "4", "title": "TESTING", "cards": [] },
+    { "id": "5", "title": "DONE", "cards": [] }
+  ]
+}

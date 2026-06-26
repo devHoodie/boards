@@ -1,3 +1,4 @@
+import { dataTransferHasType } from './utils.js'
 import { TAG_MIME } from './tags.js'
 
 let draggedCard = null
@@ -59,7 +60,7 @@ function moveCardToPosition (card, cardsContainer, position) {
 export function initDragDrop (listsContainer, onDrop) {
   listsContainer.addEventListener('dragstart', e => {
     const card = e.target.closest('.card')
-    if (!card || e.dataTransfer.types.includes(TAG_MIME)) return
+    if (!card || dataTransferHasType(e.dataTransfer, TAG_MIME)) return
 
     draggedCard = card
     card.classList.add('dragging')
@@ -78,7 +79,7 @@ export function initDragDrop (listsContainer, onDrop) {
   })
 
   listsContainer.addEventListener('dragover', e => {
-    if (!draggedCard || e.dataTransfer.types.includes(TAG_MIME)) return
+    if (!draggedCard || dataTransferHasType(e.dataTransfer, TAG_MIME)) return
 
     e.preventDefault()
     e.dataTransfer.dropEffect = 'move'
@@ -103,7 +104,7 @@ export function initDragDrop (listsContainer, onDrop) {
   })
 
   listsContainer.addEventListener('drop', e => {
-    if (!draggedCard || e.dataTransfer.types.includes(TAG_MIME)) return
+    if (!draggedCard || dataTransferHasType(e.dataTransfer, TAG_MIME)) return
     e.preventDefault()
     clearDragState()
   })

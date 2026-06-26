@@ -1,5 +1,6 @@
 import { $, DESCRIPTION_PLACEHOLDER, placeCaretAtEnd, logError } from './utils.js'
 import { saveState, loadState, applyImportedState, resetBoard, getStoredState } from './state.js'
+import { isCollabMode } from './mode.js'
 import {
   createCard,
   updateChecklistBadge,
@@ -7,11 +8,10 @@ import {
   saveCurrentCardState,
   addChecklistItem
 } from './cards.js'
-import { createTag, clearTags, applyTagToCard, initTags } from './tags.js'
+import { createTag, clearTags, applyTagToCard, initTags, getArmedTag, clearArmedTag } from './tags.js'
 import { initDragDrop } from './drag-drop.js'
 import { initSearch } from './search.js'
 import { initModals, closeModal } from './ui/modal.js'
-import { initDrawer } from './ui/drawer.js'
 import { showToast } from './ui/toast.js'
 import { initGoogleDrive, ensureGoogleButton } from './google-drive.js'
 
@@ -159,6 +159,15 @@ function initListEvents () {
 
     const card = e.target.closest('.card')
     if (card && !e.target.closest('.delete-card-btn, .card-tag, .card-name, .card-description')) {
+      const armed = getArmedTag()
+      if (armed) {
+        if (applyTagToCard(card, armed)) {
+          saveState()
+          showToast(`Tag "${armed.name}" added`)
+        }
+        clearArmedTag()
+        return
+      }
       showCardDetail(card)
     }
   })
@@ -191,7 +200,7 @@ function initBoardTitle () {
 }
 
 function initImportExport () {
-  $('#export-btn')?.addEventListener('click', async () => {
+  async function exportBoard () {
     try {
       const state = getStoredState()
       if (!state.lists) {
@@ -224,7 +233,10 @@ function initImportExport () {
     } catch (error) {
       if (error.name !== 'AbortError') logError(error)
     }
-  })
+  }
+
+  $('#export-btn')?.addEventListener('click', exportBoard)
+  $('#export-btn-collab')?.addEventListener('click', exportBoard)
 
   $('#import-btn')?.addEventListener('click', () => $('#import-file').click())
 
@@ -241,7 +253,8 @@ function initImportExport () {
           return
         }
 
-        applyImportedState(state, { ...boardHelpers, clearTags })
+        applyImportedState(state, { ...boardHelpers, clearTags }, { persistLocal: !isCollabMode })
+        if (isCollabMode) saveState()
         closeModal('card-modal')
         showToast('Board imported successfully')
         e.target.value = ''
@@ -258,6 +271,28 @@ function initImportExport () {
       resetBoard()
     }
   })
+
+  $('#join-shared-room-btn')?.addEventListener('click', () => {
+    const url = new URL(location.href)
+    url.searchParams.set('room', 'public')
+    location.href = url.toString()
+  })
+
+  $('#copy-room-link-btn')?.addEventListener('click', async () => {
+    const { copyRoomLink } = await import('./sync.js')
+    copyRoomLink()
+  })
+
+  $('#reset-room-btn')?.addEventListener('click', async () => {
+    const { resetCollabRoom } = await import('./sync.js')
+    resetCollabRoom()
+  })
+
+  $('#leave-room-btn')?.addEventListener('click', () => {
+    const url = new URL(location.href)
+    url.searchParams.delete('room')
+    location.href = url.toString()
+  })
 }
 
 function initChecklist () {
@@ -267,9 +302,8 @@ function initChecklist () {
   })
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   initModals()
-  initDrawer()
   initTags()
   initSearch()
   initBoardMenu()
@@ -281,7 +315,15 @@ document.addEventListener('DOMContentLoaded', () => {
   initChecklist()
   initGoogleDrive()
 
-  loadState(boardHelpers)
+  if (!isCollabMode) {
+    loadState(boardHelpers)
+  }
 
   initDragDrop($('.lists-container'), () => saveState())
+
+  if (isCollabMode) {
+    const { initCollab } = await import('./sync.js')
+    const { roomId } = await import('./mode.js')
+    await initCollab(roomId, boardHelpers)
+  }
 })

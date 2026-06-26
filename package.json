@@ -1,0 +1,25 @@
+{
+  "name": "boards",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/devHoodie/boards.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/devHoodie/boards/issues"
+  },
+  "homepage": "https://github.com/devHoodie/boards#readme",
+  "description": "",
+  "dependencies": {
+    "y-indexeddb": "^9.0.12",
+    "y-webrtc": "^10.3.0",
+    "yjs": "^13.6.31"
+  }
+}

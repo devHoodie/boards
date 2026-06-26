@@ -1,6 +1,7 @@
 import { $, DESCRIPTION_PLACEHOLDER } from './utils.js'
 import { saveState } from './state.js'
 import { openModal } from './ui/modal.js'
+import { renderModalTagPicker, refreshModalTags } from './tags.js'
 
 export function updateChecklistBadge (card) {
   let badge = card.querySelector('.checklist-badge')
@@ -124,7 +125,6 @@ export function showCardDetail (card) {
 
   const cardName = card.querySelector('.card-name').textContent
   const cardDescription = card.querySelector('.card-description').textContent
-  const cardTags = card.querySelectorAll('.card-tag')
 
   $('#card-detail-name').textContent = cardName
   const descField = $('#card-detail-description')
@@ -132,13 +132,8 @@ export function showCardDetail (card) {
 
   const tagsContainer = $('#card-detail-tags')
   tagsContainer.innerHTML = ''
-  cardTags.forEach(tag => {
-    const tagElement = document.createElement('div')
-    tagElement.className = 'card-detail-tag'
-    tagElement.textContent = tag.textContent
-    tagElement.style.backgroundColor = tag.style.backgroundColor
-    tagsContainer.appendChild(tagElement)
-  })
+  refreshModalTags(card)
+  renderModalTagPicker(card)
 
   const checklistItems = card.dataset.checklist ? JSON.parse(card.dataset.checklist) : []
   const checklistContainer = $('#checklist-items')

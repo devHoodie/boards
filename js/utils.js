@@ -14,6 +14,23 @@ export function placeCaretAtEnd (element) {
 
 let errorCount = 0
 
+export function dataTransferHasType (transfer, type) {
+  if (!transfer?.types) return false
+  if (typeof transfer.types.includes === 'function') return transfer.types.includes(type)
+  if (typeof transfer.types.contains === 'function') return transfer.types.contains(type)
+  return Array.from(transfer.types).includes(type)
+}
+
+function formatError (error) {
+  if (error instanceof Error) return error.message
+  if (typeof error === 'string') return error
+  try {
+    return JSON.stringify(error)
+  } catch {
+    return String(error)
+  }
+}
+
 export function logError (error) {
   const errorLog = $('.error-log')
   const errorCountEl = $('#error-count')
@@ -21,7 +38,7 @@ export function logError (error) {
   if (!errorLog) return
 
   const message = document.createElement('div')
-  message.textContent = `[Error] ${error?.message || error}`
+  message.textContent = `[Error] ${formatError(error)}`
   errorLog.appendChild(message)
   errorLog.scrollTop = errorLog.scrollHeight
 

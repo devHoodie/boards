@@ -4,16 +4,56 @@ import { updateListCounts } from './search.js'
 const STORAGE_KEY = 'trelloBoard'
 let saveTimeout = null
 let onSaveCallbacks = []
+let collabPush = null
+let isCollabMode = false
 
 export function onSave (fn) {
   onSaveCallbacks.push(fn)
 }
 
-function setSaveStatus (status) {
+export function enableCollabMode (pushFn) {
+  isCollabMode = true
+  collabPush = pushFn
+}
+
+export function isInCollabMode () {
+  return isCollabMode
+}
+
+export function setSaveStatus (status) {
   const el = $('#save-status')
   if (!el) return
   el.textContent = status
   el.classList.toggle('saving', status === 'Saving…')
+}
+
+export function collectBoardState () {
+  const boardTitle = $('.board-title')?.textContent || 'My Board'
+  const lists = $$('.list')
+  const tags = $$('.tag').map(tag => ({
+    name: tag.dataset.tagName || tag.textContent.replace(/×/g, ''),
+    color: tag.dataset.tagColor || tag.style.backgroundColor
+  }))
+
+  return {
+    boardTitle,
+    tags,
+    lists: lists.map(list => ({
+      id: list.dataset.listId,
+      title: list.querySelector('h2').textContent,
+      cards: $$('.card', list).map(card => ({
+        text: card.querySelector('.card-name').textContent,
+        description: card.querySelector('.card-description').textContent,
+        tags: $$('.card-tag', card).map(tag => ({
+          name: tag.textContent,
+          color: tag.style.backgroundColor
+        })),
+        checklist: card.dataset.checklist
+          ? JSON.parse(card.dataset.checklist)
+          : []
+      }))
+    }))
+  }
 }
 
 export function saveState () {
@@ -22,31 +62,14 @@ export function saveState () {
 
   saveTimeout = setTimeout(() => {
     try {
-      const boardTitle = $('.board-title')?.textContent || 'My Board'
-      const lists = $$('.list')
-      const tags = $$('.tag').map(tag => ({
-        name: tag.dataset.tagName || tag.textContent.replace(/×/g, ''),
-        color: tag.style.backgroundColor
-      }))
+      const state = collectBoardState()
 
-      const state = {
-        boardTitle,
-        tags,
-        lists: lists.map(list => ({
-          id: list.dataset.listId,
-          title: list.querySelector('h2').textContent,
-          cards: $$('.card', list).map(card => ({
-            text: card.querySelector('.card-name').textContent,
-            description: card.querySelector('.card-description').textContent,
-            tags: $$('.card-tag', card).map(tag => ({
-              name: tag.textContent,
-              color: tag.style.backgroundColor
-            })),
-            checklist: card.dataset.checklist
-              ? JSON.parse(card.dataset.checklist)
-              : []
-          }))
-        }))
+      if (isCollabMode && collabPush) {
+        collabPush(state)
+        updateListCounts()
+        onSaveCallbacks.forEach(fn => fn(state))
+        setSaveStatus('Saved')
+        return
       }
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
@@ -61,6 +84,13 @@ export function saveState () {
 }
 
 export function getStoredState () {
+  if (isCollabMode) {
+    try {
+      return collectBoardState()
+    } catch {
+      return {}
+    }
+  }
   try {
     return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}
   } catch {
@@ -104,7 +134,11 @@ export function loadState ({ createTag, createCard, applyTagToCard, updateCheckl
   }
 }
 
-export function applyImportedState (state, { createTag, clearTags, createCard, applyTagToCard, updateChecklistBadge }) {
+export function applyImportedState (
+  state,
+  { createTag, clearTags, createCard, applyTagToCard, updateChecklistBadge },
+  { persistLocal = !isCollabMode } = {}
+) {
   const listsContainer = $('.lists-container')
   listsContainer.innerHTML = ''
   clearTags()
@@ -129,11 +163,14 @@ export function applyImportedState (state, { createTag, clearTags, createCard, a
     })
   })
 
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+  if (persistLocal) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+  }
   updateListCounts()
 }
 
 export function resetBoard () {
+  if (isCollabMode) return
   localStorage.removeItem(STORAGE_KEY)
   location.reload()
 }
