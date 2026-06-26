@@ -1,6 +1,6 @@
-import { $, $$, createListElement, logError, DESCRIPTION_PLACEHOLDER } from './utils.js'
+import { $, $$, createListElement, logError, DESCRIPTION_PLACEHOLDER, generateId } from './utils.js'
 import { updateListCounts } from './search.js'
-import { generateId, defaultRevision, normalizeState } from './merge.js'
+import { normalizeState } from './merge.js'
 
 const STORAGE_KEY = 'trelloBoard'
 let saveTimeout = null
@@ -9,6 +9,16 @@ let collabPush = null
 let isCollabMode = false
 let lastCollectedState = null
 const tombstones = new Map()
+
+function defaultRevision (ts = Date.now()) {
+  return {
+    text: ts,
+    description: ts,
+    listId: ts,
+    tags: ts,
+    checklist: ts
+  }
+}
 
 export function onSave (fn) {
   onSaveCallbacks.push(fn)
@@ -143,9 +153,6 @@ export function collectBoardState () {
       id: list.dataset.listId,
       title: list.querySelector('h2').textContent,
       cards: $$('.card', list).map(card => {
-        const cardId = card.dataset.cardId || generateId()
-        if (!card.dataset.cardId) card.dataset.cardId = cardId
-
         const cardData = {
           text: card.querySelector('.card-name').textContent,
           description: card.querySelector('.card-description').textContent,
@@ -159,6 +166,8 @@ export function collectBoardState () {
         }
 
         if (isCollabMode) {
+          const cardId = card.dataset.cardId || generateId()
+          if (!card.dataset.cardId) card.dataset.cardId = cardId
           cardData.id = cardId
           cardData.listId = list.dataset.listId
           cardData.revision = getCardRevision(cardId)
@@ -220,10 +229,10 @@ export function getStoredState () {
 }
 
 function loadCardIntoList (listElement, card, { createCard, applyTagToCard, updateChecklistBadge }) {
-  const cardElement = createCard(listElement, card.text, card.description, {
-    id: card.id,
-    revision: card.revision
-  })
+  const meta = isCollabMode
+    ? { id: card.id, revision: card.revision, checklist: card.checklist }
+    : {}
+  const cardElement = createCard(listElement, card.text, card.description, meta)
   card.tags?.forEach(tag => applyTagToCard(cardElement, tag))
   if (card.checklist?.length) {
     cardElement.dataset.checklist = JSON.stringify(card.checklist)
@@ -251,7 +260,7 @@ export function loadState ({ createTag, createCard, applyTagToCard, updateCheckl
         if (!listElement) return
 
         listElement.querySelector('h2').textContent = list.title
-        list.cards.forEach(card => {
+        ;(list.cards || []).forEach(card => {
           loadCardIntoList(listElement, card, { createCard, applyTagToCard, updateChecklistBadge })
         })
       })
@@ -290,7 +299,7 @@ export function applyImportedState (
     const listElement = createListElement(list)
     listsContainer.appendChild(listElement)
 
-    list.cards.forEach(card => {
+    list.cards?.forEach(card => {
       loadCardIntoList(listElement, card, { createCard, applyTagToCard, updateChecklistBadge })
     })
   })

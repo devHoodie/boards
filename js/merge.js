@@ -1,10 +1,8 @@
-import { DESCRIPTION_PLACEHOLDER } from './utils.js'
+import { DESCRIPTION_PLACEHOLDER, generateId } from './utils.js'
 
 const CARD_FIELDS = ['text', 'description', 'listId', 'tags', 'checklist']
 
-export function generateId () {
-  return crypto.randomUUID()
-}
+export { generateId }
 
 export function defaultRevision (ts = Date.now()) {
   return {
